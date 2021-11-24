@@ -33,24 +33,27 @@ def main(dirname, to, phash_diff='12', colorhash_diff='2', move='copy', move_typ
     else:
         colorhash_diff = None
 
+    processed = []
     filepathes = sorted(map(lambda filename: os.path.join(
         dirname, filename), next(os.walk(dirname), (None, None, []))[2]))
     similar_groups = ImageDeduplicator.find_similar_images_groups(
         filepathes, 8, phash_diff, colorhash_diff)
     for i, similar_group in enumerate(sorted(similar_groups)):
         for j, filepath in enumerate(sorted(similar_group)):
-            file = TItem(filepath)
-            file.name = "{}_{}__{}".format(i+1, j+1, file.name)
-            file.path_to_dir = to
-            if move_type == 'muldir':
-                path_to_dir = os.path.join(to, str(i+1))
-                if not os.path.exists(path_to_dir):
-                    os.mkdir(path_to_dir)
-                file.path_to_dir = path_to_dir
-            if move == 'move':
-                os.rename(file.old(), file.new())
-            else:
-                shutil.copyfile(file.old(), file.new())
+            if filepath not in processed:
+                file = TItem(filepath)
+                file.name = "{}_{}__{}".format(i+1, j+1, file.name)
+                file.path_to_dir = to
+                if move_type == 'muldir':
+                    path_to_dir = os.path.join(to, str(i+1))
+                    if not os.path.exists(path_to_dir):
+                        os.mkdir(path_to_dir)
+                    file.path_to_dir = path_to_dir
+                if move == 'move':
+                    os.rename(file.old(), file.new())
+                else:
+                    shutil.copyfile(file.old(), file.new())
+            processed.append(filepath)
     deduplicate.main(to)
     return
 
